@@ -17,33 +17,33 @@ pub struct Board{
     cells: u64,
 }
 
-fn merge_line(mut line: Vec<u64>) -> Vec<u64> {
-    let mut changed = true;
+fn merge_line(line: Vec<u64>) -> Vec<u64>{
+    let mut result = Vec::new();
+    let mut i = 0;
 
-    while changed {
-        changed = false;
-
-        let mut result = Vec::new();
-        let mut i = 0;
-
-        while i < line.len() {
-            if i + 1 < line.len() && line[i] == line[i + 1] {
-                // Merge
+    while i < line.len(){
+        if line[i]  != 0{
+            if i+1 < line.len() && line[i] == line[i+1] {
                 result.push(line[i] + 1);
-                i += 2;
-                changed = true;
-            } else {
+                i+=1;
+            }
+            else{
                 result.push(line[i]);
-                i += 1;
             }
         }
-        for i in result.len()..line.len(){
-            result.push(0);
-        }
-        line = result
+        i+=1;
     }
-    line
+
+    for _i in result.len()..line.len(){
+        result.push(0);
+    }
     
+    if result == line{
+        result
+    }
+    else{
+        merge_line(result)
+    }
 }
 
 impl Board{
@@ -79,110 +79,87 @@ impl Board{
         match direction{
             Direction::Up => 
                 for col in 0..COLS{
+                    //creates a vector for the col
                     let mut line = Vec::new();
                     for row in 0..ROWS{
                         line.push(self.get(row, col));
 
                     }
+                    // merges the vector in accordance to 2048 rules
                     let mut new_line = merge_line(line);
-                    for row in 0..ROWS{
+
+                    // update the board 
+                    // makes sure it is replaced in the correct order
+                    for row in 1..=ROWS{
                         match new_line.pop(){
-                            Some(val) => self.set(row, col, val),
+                            Some(val) => self.set(ROWS - row, col, val),
                             None => panic!("length of result vec doesnt match")
                         }
                     }
 
                 }, 
 
-            Direction::Left => // for each cell
+            Direction::Left => 
                 for row in 0..ROWS{
+                    //creates a vector for the row
+                    let mut line = Vec::new();
                     for col in 0..COLS{
-                        let curr_val = self.get(row, col);
-                        if curr_val != 0{
-                            //check spots left of  the cell
-                            for left in 1..=col{
-                                let left_val = self.get(row, col - left);
-                                // merge with the value
-                                if curr_val == left_val{
-                                    self.set(row, col , 0);
-                                    self.set(row, col - left, curr_val+1);
-                                    break;
-                                // there is no value above
-                                }else if (col - left == 0) & (left_val == 0){
-                                    self.set(row, col, 0);
-                                    self.set(row, 0, curr_val);
-                                    break;
-                                }
-                                // there is a value blocking
-                                else if left_val != 0{
-                                    self.set(row, col, 0);
-                                    self.set(row, col - left + 1, curr_val);
-                                    break;
-                                }
-                            }
-                    }
-                    }
-                }, 
-            Direction::Down => // for each cell
-                for row in (0..ROWS).rev(){
-                    for col in (0..COLS).rev(){
-                        let curr_val = self.get(row, col);
-                        if curr_val != 0{
-                            //check spots above the cell
-                            for below in (row + 1)..ROWS{
-                                let below_val = self.get(below, col);
-                                // merge with the value
-                                if curr_val == below_val{
-                                    self.set(row, col , 0);
-                                    self.set(below, col, curr_val+1);
-                                    break;
-                                // there is no value below
-                                }else if (below == ROWS - 1) & (below_val == 0){
-                                    self.set(row, col, 0);
-                                    self.set(ROWS - 1, col, curr_val);
-                                    break;
-                                }
-                                // there is a value blocking
-                                else if below_val != 0{
-                                    self.set(row, col, 0);
-                                    self.set(below - 1, col , curr_val);
-                                    break;
-                                }
-                            }
-                    }
-                    }
-                },
-            Direction::Right =>
-            // for each cell
-                for row in (0..ROWS).rev(){
-                    for col in (0..COLS).rev(){
-                        let mut curr_val = self.get(row, col);
-                        if curr_val != 0{
-                            //check spots above the cell
-                            for right in (col + 1)..COLS{
-                                let right_val = self.get(row, right);
-                                // merge with the value
-                                if curr_val == right_val{
-                                    //update curr_val and reset the original spot 
-                                    curr_val += 1;
-                                    self.set(row, col , 0);
-                                    self.set(row, right, curr_val+1);
+                        line.push(self.get(row, col));
 
-                                // there is no value below
-                                }else if (right == COLS - 1) & (right_val == 0){
-                                    self.set(row, col, 0);
-                                    self.set(row, COLS - 1, curr_val);
-                                    break;
-                                }
-                                // there is a value blocking
-                                else if right_val != 0{
-                                    self.set(row, col, 0);
-                                    self.set(row, right - 1 , curr_val);
-                                    break;
-                                }
-                            }
+                    }
+                    // merges the vector in accordance to 2048 rules
+                    let mut new_line = merge_line(line);
+
+                    // updates the board
+                    // makes sure it is replaced in the correct order
+                    for col in 1..=COLS{
+                        match new_line.pop(){
+                            Some(val) => self.set(row, COLS - col, val),
+                            None => panic!("length of result vec doesnt match")
                         }
                     }
+
+                }, 
+            Direction::Down => 
+                for col in 0..COLS{
+                    //creates a vector for the col
+                    // vectore is built reversed so merge works in the correct direction
+                    let mut line = Vec::new();
+                    for row in (0..ROWS).rev(){
+                        line.push(self.get(row, col));
+
+                    }
+                    // merges the vector in accordance to 2048 rules
+                    let mut new_line = merge_line(line);
+
+                    // update the board 
+                    for row in 0 ..ROWS{
+                        match new_line.pop(){
+                            Some(val) => self.set(row, col, val),
+                            None => panic!("length of result vec doesnt match")
+                        }
+                    }
+
+                },
+            Direction::Right =>
+                for row in 0..ROWS{
+                    //creates a vector for the row
+                    // vectore is built reversed so merge works in the correct direction
+                    let mut line = Vec::new();
+                    for col in (0..COLS).rev(){
+                        line.push(self.get(row, col));
+                    }
+                    // merges the vector in accordance to 2048 rules
+                    let mut new_line = merge_line(line);
+
+                    // updates the board
+                    for col in 0..COLS{
+                        match new_line.pop(){
+                            Some(val) => self.set(row, col, val),
+                            None => panic!("length of result vec doesnt match")
+                        }
+                    }
+
                 }
         }
     }

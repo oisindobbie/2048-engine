@@ -17,12 +17,12 @@ fn main() {
     board.set_ind(3, 7);
     board.set_ind(6, 7);
     board.set_ind(10, 4);
-    board.set_ind(14, 4);
+    board.set_ind(14, 5);
     // println!("{}", board.get_ind(2));
     println!("next board:");
     board.print_board();
 
-    board.make_move(Direction::Up);
+    board.make_move(Direction::Right);
     // println!("{}, {}", board.get(2, 3), board.get(1, 3));
     println!("another board:");
     board.print_board();
