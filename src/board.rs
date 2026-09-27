@@ -1,5 +1,9 @@
 
-#[derive(Clone, Copy, Debug)]
+use rand::seq::SliceRandom;
+use rand::Rng;
+
+// #[derive(Clone, Copy, Debug)]
+
 pub enum Direction {
     Up,
     Down,
@@ -46,6 +50,7 @@ fn merge_line(line: Vec<u64>) -> Vec<u64>{
     }
 }
 
+
 impl Board{
     pub fn new()->Self {
         Self{
@@ -75,7 +80,10 @@ impl Board{
             println!("{}, {}, {}, {}", self.get_ind(i*ROWS), self.get_ind(i*ROWS+1), self.get_ind(i*ROWS+2), self.get_ind(i*ROWS + 3));
         }
     }
-    pub fn make_move(&mut self, direction: Direction){
+    pub fn make_move(&mut self, direction: Direction) -> bool{
+        // store original state to ensure valid move
+        let before = self.cells;
+        // shift and combine tiles
         match direction{
             Direction::Up => 
                 for col in 0..COLS{
@@ -162,6 +170,36 @@ impl Board{
 
                 }
         }
+
+        // add new tile if valid move
+        if self.cells != before{
+            self.add_rand_tile()
+        }else{
+            true
+        }
+    }
+
+    pub fn add_rand_tile(&mut self) -> bool{
+        let mut allowed_ind =  Vec::new();
+        for ind in 0..ROWS*COLS{
+            if self.get_ind(ind) == 0{
+                allowed_ind.push(ind);
+            }
+        }
+
+        let mut rng = rand::thread_rng();
+        if let Some(index) = allowed_ind.choose(&mut rng){
+            if rng.gen_range(1..=10) == 10{
+                self.set_ind(*index, 2);
+            }else{
+                self.set_ind(*index, 1);
+            }
+            true
+        }
+        else{
+            false
+        }
+    
     }
 
 }
